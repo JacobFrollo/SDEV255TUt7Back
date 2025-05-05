@@ -9,21 +9,16 @@ const bcrypt = require("bcryptjs")
 
 app.use(cors())
 
-// Middleware that parses HTTP requests with JSON body
 app.use(express.json());
 
 const router = express.Router();
-//create a secret word that the server will use to encode and decode the token
 const secret = "supersecret"
 
-//we can create a way to add a new person to a database
-//post
 router.post("/user", async (req, res) => {
     if (!req.body.username || !req.body.password) {
         res.status(400).json({ error: "Missing username or passwword" })
     }
 
-    //create a hash to encrypt the password
     const hash = bcrypt.hashSync(req.body.password, 10)
     const newUser = await new User({
         username: req.body.username,
@@ -39,13 +34,11 @@ router.post("/user", async (req, res) => {
     }
 })
 
-//authenticate a user to sign in
 router.post("/auth", async (req, res) => {
     if (!req.body.username || !req.body.password) {
         res.status(401).json({ error: "Missing username or password" })
         return
     }
-    //find the user in the database
     try {
         const user = await User.findOne({ username: req.body.username })
         if (!user) {
@@ -53,9 +46,7 @@ router.post("/auth", async (req, res) => {
 
         }
         else {
-            //check the username and password to see if they match
             if (bcrypt.compareSync(req.body.password, user.password)) {
-                //create a token
                 const token = jwt.encode({ username: user.username }, secret)
                 res.json({ token: token, username: user.username, userID: user._id })
             }
@@ -71,9 +62,6 @@ router.post("/auth", async (req, res) => {
 
 })
 
-
-
-// Get list of all songs in the database
 router.get("/songs", async (req, res) => {
     try {
         const songs = await Song.find({})
@@ -86,7 +74,6 @@ router.get("/songs", async (req, res) => {
 
 })
 
-//Grab a single song in the database
 router.get("/songs/:id", async (req, res) => {
     try {
         const song = await Song.findById(req.params.id)
@@ -97,7 +84,6 @@ router.get("/songs/:id", async (req, res) => {
     }
 })
 
-//added a song to the database
 router.post("/songs", async (req, res) => {
     try {
         const song = await new Song(req.body)
@@ -113,11 +99,7 @@ router.post("/songs", async (req, res) => {
 
 })
 
-//update is to update an existing record/resource/database entry..it uses a put request
 router.put("/songs/:id", async (req, res) => {
-    //first we need to find and update the song the front end wants us to update.
-    //to do this we need to request the id of the song from request
-    //and the find it in the database and update it
     try {
         const song = req.body
         await Song.updateOne({ _id: req.params.id }, song)
